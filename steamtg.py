@@ -19,7 +19,7 @@ if os.path.exists(SENT_FILE):
         sent_games = set()
 
 def send_plain_msg(text):
-    """发送纯文本消息（用于状态通知）"""
+    """发送纯文本消息"""
     url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
     data = {
         "chat_id": TG_CHAT_ID,
@@ -74,9 +74,10 @@ def main():
         print("❌ 未配置 TG 令牌或聊天ID")
         return
 
-    # ========== 固定推送：已开始搜索今日游戏 ==========
-    send_plain_msg("✅ 已搜索今日游戏，正在检查免费内容...")
+    # ========== 你要的：固定第一条消息 ==========
+    send_plain_msg("📢 今日Steam游戏")
 
+    # 开始检查游戏
     games = get_free_games()
     new_count = 0
 
@@ -89,17 +90,17 @@ def main():
         send_telegram(game)
         new_count += 1
 
-    # 保存去重列表
+    # 保存去重
     with open(SENT_FILE, "w", encoding="utf-8") as f:
         json.dump(list(sent_games), f, ensure_ascii=False)
 
-    # 结束通知
+    # 结束提示
     if new_count == 0:
-        send_plain_msg("🎮 今日无新的免费游戏可领取")
+        send_plain_msg("✅ 今日暂无免费游戏")
     else:
-        send_plain_msg(f"🎯 今日任务完成！共推送 {new_count} 个免费游戏")
+        send_plain_msg(f"✅ 今日免费游戏推送完毕，共 {new_count} 个")
 
-    print(f"🎯 任务完成，本次推送 {new_count} 个游戏")
+    print(f"任务完成，发送 {new_count} 个游戏")
 
 if __name__ == "__main__":
     main()
