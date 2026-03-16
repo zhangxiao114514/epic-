@@ -18,6 +18,19 @@ if os.path.exists(SENT_FILE):
     except:
         sent_games = set()
 
+def send_plain_msg(text):
+    """发送纯文本消息（用于状态通知）"""
+    url = f"https://api.telegram.org/bot{TG_BOT_TOKEN}/sendMessage"
+    data = {
+        "chat_id": TG_CHAT_ID,
+        "text": text,
+        "parse_mode": "Markdown"
+    }
+    try:
+        requests.post(url, json=data, timeout=10)
+    except:
+        pass
+
 def get_free_games():
     """获取 Steam 免费游戏"""
     url = "https://store.steampowered.com/api/featuredcategories"
@@ -61,12 +74,12 @@ def main():
         print("❌ 未配置 TG 令牌或聊天ID")
         return
 
-    games = get_free_games()
-    if not games:
-        print("✅ 今日无免费游戏")
-        return
+    # ========== 固定推送：已开始搜索今日游戏 ==========
+    send_plain_msg("✅ 已搜索今日游戏，正在检查免费内容...")
 
+    games = get_free_games()
     new_count = 0
+
     for game in games:
         appid = game.get("id")
         if not appid or appid in sent_games:
@@ -79,6 +92,12 @@ def main():
     # 保存去重列表
     with open(SENT_FILE, "w", encoding="utf-8") as f:
         json.dump(list(sent_games), f, ensure_ascii=False)
+
+    # 结束通知
+    if new_count == 0:
+        send_plain_msg("🎮 今日无新的免费游戏可领取")
+    else:
+        send_plain_msg(f"🎯 今日任务完成！共推送 {new_count} 个免费游戏")
 
     print(f"🎯 任务完成，本次推送 {new_count} 个游戏")
 
